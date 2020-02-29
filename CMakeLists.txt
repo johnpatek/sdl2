@@ -1795,6 +1795,38 @@ if (NOT ANDROID)
   set_target_properties(SDL2main PROPERTIES DEBUG_POSTFIX ${SDL_CMAKE_DEBUG_POSTFIX})
 endif()
 
+
+add_library(SDL2_static STATIC ${SOURCE_FILES} ${VERSION_SOURCES})
+set_property(TARGET SDL2_static PROPERTY POSITION_INDEPENDENT_CODE ON)
+if(APPLE)
+  set_target_properties(SDL2_static PROPERTIES
+    MACOSX_RPATH 1
+    OUTPUT_NAME "SDL2_static")
+elseif(UNIX AND NOT ANDROID)
+  set_target_properties(SDL2_static PROPERTIES
+    VERSION ${LT_VERSION}
+    SOVERSION ${LT_REVISION}
+    OUTPUT_NAME "SDL2_static")
+else()
+  set_target_properties(SDL2_static PROPERTIES
+    VERSION ${SDL_VERSION}
+    SOVERSION ${LT_REVISION}
+    OUTPUT_NAME "SDL2_static")
+endif()
+if(MSVC AND NOT LIBC)
+  # Don't try to link with the default set of libraries.
+  set_target_properties(SDL2_static PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB")
+  set_target_properties(SDL2_static PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB")
+  set_target_properties(SDL2_static PROPERTIES STATIC_LIBRARY_FLAGS "/NODEFAULTLIB")
+endif()
+set(_INSTALL_LIBS "SDL2_static" ${_INSTALL_LIBS})
+target_link_libraries(SDL2_static ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+target_include_directories(SDL2_static PUBLIC "$<BUILD_INTERFACE:${SDL2_SOURCE_DIR}/include>" $<INSTALL_INTERFACE:include/SDL2>)
+if (NOT ANDROID)
+  set_target_properties(SDL2_static PROPERTIES DEBUG_POSTFIX ${SDL_CMAKE_DEBUG_POSTFIX})
+endif()
+
+
 if(SDL_SHARED)
   add_library(SDL2 SHARED ${SOURCE_FILES} ${VERSION_SOURCES})
   if(APPLE)
